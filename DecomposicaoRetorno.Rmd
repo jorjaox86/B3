@@ -1,0 +1,252 @@
+---
+title: "Decomposição do Retorno"
+output: html_notebook
+resource_files:
+- apoio.R
+---
+
+```{r echo=FALSE,include=F}
+library(readxl)
+library(rootSolve)
+library(data.table)
+library(svglite)
+library(slickR)
+library(knitr)
+```
+
+# Etapa 1 - Aquisição e tratamento dos dados
+
+## Aquisitando dados
+
+Dados aquisitados de planilha com dados cadastrais das empresas em *dados/Tickers.xlsx*
+
+```{r,results='asis'}
+
+empB3 <- data.table(read_xlsx("dados/Tickers.xlsx"))
+dsBR <- data.table(read_xlsx("dados/Tickers.xlsx",sheet = "DataStream"))
+dsBR <- dsBR[RIC %in% empB3$Ticker]
+dsBR <- dsBR[,.(Name,Symbol,RIC,Hist.,Sector)]
+dsBR
+```
+
+Dados de Scores ESG em *dados/ESG_Score.xlsx*
+
+```{r,results='asis'}
+esgB3 <- data.table(read_xlsx("dados/ESG_Score.xlsx"))
+esgB3[ESG_Score == "NULL",ESG_Score := NA]
+esgB3 <- esgB3[!is.na(ESG_Score)]
+esgB3[,Ano := year(Data)]
+esgB3[,ESG_Score := as.numeric(ESG_Score)]
+esgB3 <- esgB3[,.(ESG_Score = mean(ESG_Score)),.(Stock)]
+esgB3
+```
+
+Dados de 2015 a 2019 do Datastream em *dados/datastream.xlsx*
+
+```{r,results='asis'}
+dados <- data.table(read_xlsx("dados/datastream.xlsx",sheet="dados"))
+## Ultima coluda de dados
+endtimecol <- ncol(dados)
+## Vetor com anos do arquivo
+anos <- names(dados)[3:endtimecol]
+anos <- substr(as.numeric(anos)- 10 + as.Date("1900-01-01"),1,4)
+names(dados)[3:endtimecol] <- anos
+## Tabela com codificacao mais amigavel das variaveis
+ref <- data.table(read_xlsx("dados/datastream.xlsx",sheet="ref",range = "B1:C26",col_names = c("CODE","VAR")))
+## Coluna com nome da empresa
+dados[,Empresa := unlist(lapply(strsplit(dados$Name," - "),function(x)x[1]))]
+## Coluna com o codigo da variavel
+dados[,VarCode := gsub('^.*\\(|\\)','',Code)]
+## Coluna com o codigo da empresa (Symbol)
+dados[,EmpCode := gsub('\\(.*','',Code)]
+## Normaliza dados da tabela (dados empilhados)
+dadosn <- data.table::melt(dados,id.vars = c("Empresa","EmpCode","VarCode"),measure = 3:endtimecol,
+                           value.name = "Valor",variable.name = "Ano",variable.factor = F)
+## Converte a coluna de ano para numerico
+dadosn[,Ano := as.numeric(Ano)]
+## Ordena dados
+dadosn <- dadosn[order(Empresa,VarCode,Ano)]
+## Converte coluna valores para numerico sem mostrar erros de conversao (campos sem dado)
+suppressWarnings(dadosn[,Valor := as.numeric(Valor)])
+## Filtra somente casos com dados
+dadosn <- dadosn[complete.cases(dadosn)]
+## Mapeia nome das variaveis
+dadosn <- ref[dadosn,on = .(CODE = VarCode)]
+## Remove coluna
+dadosn[,CODE := NULL]
+dadosn
+```
+
+## Tratando dados Previstos
+
+Completando casos faltantes com previsoes futuras e aceitando somente casos onde EPS_2 \> EPS_1 em função dos ICCs de Easton e Ohlson
+
+```{r,results='asis'}
+ano_0 = 2014
+dadosF_0 <- trataPrevisao(dadosn,ref,ano = ano_0,vars = c("BPS","DPS","EPS","ROE"))
+dadosF_1 <- trataPrevisao(dadosn,ref,ano = ano_0+1,vars = c("BPS","DPS","EPS","ROE"))
+dadosF_1
+```
+
+## Selecao de dados iniciais
+
+```{r,results='asis'}
+stocks <- unique(dadosF_1$EmpCode)
+dadosI_0 <- dadosn[VAR %in% c("PRC","BPS","EPS","DPS") & Ano == ano_0 & EmpCode %in% stocks]
+dadosI_0 <- dcast(dadosI_0,EmpCode ~ VAR,value.var = "Valor")
+dadosI_1 <- dadosn[VAR %in% c("PRC","BPS","EPS","DPS") & Ano == ano_0+1 & EmpCode %in% stocks]
+dadosI_1 <- dcast(dadosI_1,EmpCode ~ VAR,value.var = "Valor")
+dadosI_1
+```
+
+## Calculo do retorno médio no periodo
+
+```{r,results='asis'}
+dadosR <- calculaRetorno(dadosn,ano_0+1)
+dadosR
+```
+
+## Cálculo do ROE típico
+
+```{r,results='asis'}
+dadosr <- data.table(read_xlsx("dados/datastream.xlsx",sheet="dadosROE"))
+ROE_historio_mediana <- ROEestimado(dadosr)
+```
+
+## Cálculo dos ICCs
+
+### GLS (Gebhardt)
+
+O cálculo deste ICC é feito segundo a seguinte equação: $P_0 = B_0 + \sum_{t=1}^{11} \frac{E_t(ROE_j)-ICC}{(1+ICC)^t}.B_{t-1} + \frac{E_t(ROE_{t+12})-ICC}{ICC.(1+ICC)^{12}}$
+
+Repare que na fórmula são aplicados ganhos no *book value* para chegar ao valor corrente do *preço da ação*.
+
+Se as diferenças entre B e P forem muito grandes o ICC tende a ir para valores extremos.
+
+Foram utilizadas as previsões do I/B/E/S para ROE e B até 5 anos a frente, do ano 6 em diante foi utilizado a mediana do ROE histórioco (1990) do portifólios de ações do estudo
+
+```{r,results='asis'}
+dtGLS_ICC_0 <- rbindlist(lapply(stocks,ICC_GLS,dadosF_0,dadosI_0,ROE_historio_mediana))
+dtGLS_ICC_1 <- rbindlist(lapply(stocks,ICC_GLS,dadosF_1,dadosI_1,ROE_historio_mediana))
+dtGLS_ICC_1
+```
+
+### CT (Claus & Thomas)
+
+O cálculo deste ICC é feito segundo a seguinte equação: $p_0 = bv_0 + \sum_{t=1}^{5} \frac{eps_t-ICC.bv_{t-1}}{(1+ICC)^t}+ \frac{eps_5-ICC.bv_4(1+g_{ae})}{(ICC-g_{ae})(1+k)^5}$
+
+Repare que na fórmula são aplicados ganhos no *book value* para chegar ao valor corrente do *preço da ação*.
+
+Se as diferenças entre B e P forem muito grandes o ICC tende a ir para valores extremos.
+
+Foram utilizadas as previsões do I/B/E/S para EPS e B até 5 anos a frente, o gae foi considerado 5%. ICC > gae é condição da equação
+
+```{r,results='asis'}
+dtCT_ICC_0 <- rbindlist(lapply(stocks,ICC_CT,dadosF_0,dadosI_0,gae = 0.05))
+dtCT_ICC_1 <- rbindlist(lapply(stocks,ICC_CT,dadosF_1,dadosI_1,gae = 0.05))
+dtCT_ICC_1
+```
+
+### OJ (Ohlson)
+
+O cálculo deste ICC é feito segundo a seguinte equação: 
+$ICC=A+\sqrt{A^2 +\frac{EPS_{1}}{P_0}(g_2-(\gamma-1))}$
+onde $A=\frac{1}{2}((\gamma-1)+\frac{DPS_1}{P_0})$,
+$g_2 = \frac{EPS_2-EPS_1}{EPS_1}$ e $g_2>ICC>\gamma-1$ logo $EPS_2>EPS_1$ é condição para a equação.
+Foi utilizado $\gamma =1.02$
+
+
+```{r,results='asis'}
+dtOJ_ICC_0 <- rbindlist(lapply(stocks,ICC_OJ,dadosF_0,dadosI_0,gma = 1.02))
+dtOJ_ICC_1 <- rbindlist(lapply(stocks,ICC_OJ,dadosF_1,dadosI_1,gma = 1.02))
+dtOJ_ICC_1
+```
+
+### E (Easton)
+
+O cálculo deste ICC é feito segundo a seguinte equação: 
+$ICC^2-ICC.\frac{dps_1}{P_0}-\frac{(eps_2-eps_1)}{P_0}=0$
+onde é considerada apenas a raíz positiva da função e $eps_2>eps_1>0$ é condição da equação.
+
+
+```{r,results='asis'}
+dtE_ICC_0 <- rbindlist(lapply(stocks,ICC_E,dadosF_0,dadosI_0))
+dtE_ICC_1 <- rbindlist(lapply(stocks,ICC_E,dadosF_1,dadosI_1))
+dtE_ICC_1
+```
+
+## Cálculos por portifolios já aplicando as considerações para a análise de robustez
+
+```{r,results='asis'}
+dtICC_0 <- comparaICCs(dtGLS_ICC_0,dtCT_ICC_0,dtOJ_ICC_0,dtE_ICC_0,dsBR,esgB3)
+dtICC_1 <- comparaICCs(dtGLS_ICC_1,dtCT_ICC_1,dtOJ_ICC_1,dtE_ICC_1,dsBR,esgB3)
+dtICC_1
+```
+
+Filtrando casos outliers
+
+```{r}
+dtICC_0 <- dtICC_0[EmpCode != "BR:RG3"]
+dtICC_1 <- dtICC_1[EmpCode != "BR:RG3"]
+```
+
+```{r,results='asis'}
+
+dtICCg_1 <- dtICC_1[,lapply(.SD,mean,na.rm=T),by=.(Group50),.SDcols=grep('ICC.*',colnames(dtICC_0),value = T)]
+dtICCg_1
+```
+
+Cálculo do delta dos ICCs que é base para NDR.
+Cálculo do NDR: $NDR=\frac{ICC-ICC_0}{1-\rho},\rho=\sqrt[12]{0.96}$
+
+```{r,results='asis'}
+colid <- names(dtICC_1)[-grep('ICC.*',names(dtICC_1))]
+dtICC_D <- melt(dtICC_1,id.vars = colid,variable.name = "ICC",variable.factor = F,value.name = "Valor")
+dtICC_D_0 <- melt(dtICC_0,id.vars = "EmpCode",measure.vars = grep('ICC.*',names(dtICC_0),value = T),variable.name = "ICC",variable.factor = F,value.name = "V0")
+dtICC_D_0 <- dtICC_D_0[!is.na(V0)]
+dtICC_D <- dtICC_D[dtICC_D_0,on = c("EmpCode","ICC")]
+dtICC_D[,Delta := Valor-V0]
+dtICC_D
+```
+
+## Tabela 1
+Expected Return
+
+```{r}
+tb1 <- decomposicaoRetorno(dtICC_D,dadosR)
+tb1[,ICC := paste0(gsub('ICC_','',ICC),"(%)")]
+tb1[,Valor := round(Valor*100,2)]
+tb1 <- dcast(tb1,VAR+VARF~ICC,value.var = "Valor")
+tb1 <- as.data.frame(tb1)
+rownames(tb1) <- tb1$VARF
+
+kable(tb1[c(4,6,5,1,7,2,3),-c(1,2)],align=c(rep('c', 4)))
+```
+
+## Tabela 2
+Teste de robustez
+Análise do ICC GLS considerando $ESG^H$ os scores maiores que $1-p$ e $ESG^L$ os scores menores que $p$ 
+
+```{r}
+   P10 <- decomposicaoRetorno(dtICC_D,dadosR,interv = list(H=c(.9,1),L=c(0,.1)))[ICC == "ICC_GLS"]
+   P20 <- decomposicaoRetorno(dtICC_D,dadosR,interv = list(H=c(.8,1),L=c(0,.2)))[ICC == "ICC_GLS"]
+   P30 <- decomposicaoRetorno(dtICC_D,dadosR,interv = list(H=c(.7,1),L=c(0,.3)))[ICC == "ICC_GLS"]
+   P40 <- decomposicaoRetorno(dtICC_D,dadosR,interv = list(H=c(.6,1),L=c(0,.4)))[ICC == "ICC_GLS"]
+   P50 <- decomposicaoRetorno(dtICC_D,dadosR,interv = list(H=c(.5,1),L=c(0,.5)))[ICC == "ICC_GLS"]
+   
+   P10[,CASE := "10%"]
+   P20[,CASE := "20%"]
+   P30[,CASE := "30%"]
+   P40[,CASE := "40%"]
+   P50[,CASE := "50% (base case)"]
+   
+   
+   tb2 <- rbind(P10,P20,P30,P40,P50)
+   tb2[,Valor := round(Valor*100,2)]
+   tb2 <- dcast(tb2,VARF~CASE,value.var = "Valor")
+   tb2 <- as.data.frame(tb2)
+   rownames(tb2) <- tb2$VARF
+   kable(tb2[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
+```
+
+
