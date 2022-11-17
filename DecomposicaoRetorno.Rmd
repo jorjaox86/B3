@@ -35,6 +35,7 @@ Dados de Scores ESG em *dados/ESG_Score.xlsx*
 esgB3 <- data.table(read_xlsx("dados/ESG_Score.xlsx"))
 esgB3[ESG_Score == "NULL",ESG_Score := NA]
 esgB3 <- esgB3[!is.na(ESG_Score)]
+esgALT <- esgB3
 esgB3[,Ano := year(Data)]
 esgB3[,ESG_Score := as.numeric(ESG_Score)]
 esgB3 <- esgB3[,.(ESG_Score = mean(ESG_Score)),.(Stock)]
@@ -249,26 +250,12 @@ Análise do ICC GLS considerando $ESG^H$ os scores maiores que $1-p$ e $ESG^L$ o
    kable(tb2[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
 ```
 
-##Gerando Dados Complementares para o cálculo dos betas
-Gerando $UR^M$, $NCF^M$ e $NDR^M$ 
-
-```{r}
-   tb6 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR)
-   tb6[,ICC := paste0(gsub('ICC_','',ICC),"(%)")]
-   tb6[,Valor := round(Valor*100,2)]
-   tb6 <- dcast(tb6,VAR+VARF~ICC,value.var = "Valor")
-   tb6 <- as.data.frame(tb6)
-   rownames(tb6) <- tb6$VARF
-   
-   kable(tb6[c(4,6,5,1,7,2,3),-c(1,2)],align=c(rep('c', 4)))
-   
-```
 
 ##CÁLCULO DOS BETAS
 BETA CASHFLOW $\beta_t^{CF} = \frac{cov_t(UR^{HL}_{t+1},NCF^M_{t+1})}{var_t(UR^{M}_{t+1})}$
 BETA DISCOUNT RATE $\beta_t^{DR} = \frac{cov_t(UR^{HL}_{t+1},-NDR^M_{t+1})}{var_t(UR^{M}_{t+1})}$
-BETA CASHFLOW $\beta_t^{CF+} = \frac{cov_t(UR^{HL}_{t+1},NCF^M_{t+1}|UR^{M}_{t+1}>0)}{var_t(UR^{M}_{t+1})}$
-BETA DISCOUNT RATE $\beta_t^{DR+} = \frac{cov_t(UR^{HL}_{t+1},-NDR^M_{t+1}|UR^{M}_{t+1})}{var_t(UR^{M}_{t+1})}$
+BETA CASHFLOW +$\beta_t^{CF+} = \frac{cov_t(UR^{HL}_{t+1},NCF^M_{t+1}|UR^{M}_{t+1}>0)}{var_t(UR^{M}_{t+1})}$
+BETA DISCOUNT RATE +$\beta_t^{DR+} = \frac{cov_t(UR^{HL}_{t+1},-NDR^M_{t+1}|UR^{M}_{t+1})}{var_t(UR^{M}_{t+1})}$
 
 ```{r}
 
@@ -278,6 +265,9 @@ BETA DISCOUNT RATE $\beta_t^{DR+} = \frac{cov_t(UR^{HL}_{t+1},-NDR^M_{t+1}|UR^{M
 ##TABELA 3
 Análise de Betas sobre portfólios que Aumentaram/diminuíram a pontuação ESG $\delta HL$
 ```{r}
+   tb3 <- betasTab3(dadosn, dtICC_D)
+   kable(tb3)
+
 
 
 ```
@@ -285,25 +275,29 @@ Análise de Betas sobre portfólios que Aumentaram/diminuíram a pontuação ESG
 ##TABELA 4
 Análise dos Betas sobre portfólios, inserindo cutoffs nos dados
 ```{r}
-   P10 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.9,1),L=c(0,.1)))[ICC == "ICC_GLS"]
-   P20 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.8,1),L=c(0,.2)))[ICC == "ICC_GLS"]
-   P30 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.7,1),L=c(0,.3)))[ICC == "ICC_GLS"]
-   P40 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.6,1),L=c(0,.4)))[ICC == "ICC_GLS"]
-   P50 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.5,1),L=c(0,.5)))[ICC == "ICC_GLS"]
+   tb4_1 <- tab4Build(dadosn, dtICC_D,ano_0+1)
+   tb4_2 <- tab4Build(dadosn, dtICC_D,ano_0)
+
+   # tb4 <- BetaTab4Calc(tb4_1,tb4_2)
    
-   P10[,CASE := "10%"]
-   P20[,CASE := "20%"]
-   P30[,CASE := "30%"]
-   P40[,CASE := "40%"]
-   P50[,CASE := "50% (base case)"]
+   # tb4_1 <- rbind(P10,P20,P30,P40,P50)
+   tb4_1[,Valor := round(Valor*100,2)]
+   tb4_1 <- dcast(tb4_1,VARF~CASE,value.var = "Valor")
+   tb4_1 <- as.data.frame(tb4_1)
+   rownames(tb4_1) <- tb4_1$VARF
+   kable(tb4_1[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
    
+   # tb4_2 <- rbind(P10,P20,P30,P40,P50)
+   tb4_2[,Valor := round(Valor*100,2)]
+   tb4_2 <- dcast(tb4_2,VARF~CASE,value.var = "Valor")
+   tb4_2 <- as.data.frame(tb4_2)
+   rownames(tb4_2) <- tb4_2$VARF
+   kable(tb4_2[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
    
-   tb4 <- rbind(P10,P20,P30,P40,P50)
-   tb4[,Valor := round(Valor*100,2)]
-   tb4 <- dcast(tb2,VARF~CASE,value.var = "Valor")
-   tb4 <- as.data.frame(tb4)
-   rownames(tb4) <- tb2$VARF
-   kable(tb4[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
+   info <- BetaTab4Calc(tb4_1, tb4_2)
+   
+   kable(info)
+
 ```
 
 ##TABELA 5
@@ -327,10 +321,10 @@ pontuação máxima: 10;
    
    tb5 <- rbind(P10,P20,P30,P40,P50)
    tb5[,Valor := round(Valor*100,2)]
-   tb5 <- dcast(tb2,VARF~CASE,value.var = "Valor")
-   tb5 <- as.data.frame(tb4)
-   rownames(tb4) <- tb2$VARF
-   kable(tb4[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
+   tb5 <- dcast(tb5,VARF~CASE,value.var = "Valor")
+   tb5 <- as.data.frame(tb5)
+   rownames(tb5) <- tb5$VARF
+   kable(tb5[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
 ```
 
 ##TABELA 6
@@ -340,10 +334,10 @@ Análise de retorno comparando as pontuações de E(environment), S(Social), G(G
    
    P50[,CASE := "50% (base case)"]
    
-   tb5 <- P50
-   tb5[,Valor := round(Valor*100,2)]
-   tb5 <- dcast(tb2,VARF~CASE,value.var = "Valor")
-   tb5 <- as.data.frame(tb4)
-   rownames(tb4) <- tb2$VARF
-   kable(tb4[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
+   tb6 <- P50
+   tb6[,Valor := round(Valor*100,2)]
+   tb6 <- dcast(tb6,VARF~CASE,value.var = "Valor")
+   tb6 <- as.data.frame(tb6)
+   rownames(tb6) <- tb6$VARF
+   kable(tb6,align=c(rep('c', 5)))
 ```
