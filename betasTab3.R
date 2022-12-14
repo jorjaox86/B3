@@ -16,57 +16,63 @@ betasTab3 <- function(dadosn,dt){
    dadosR_b[,R := ((PRC - D0)/P0)-1]
    dadosR_ano1 <- dadosR_b[,.(R = mean(R)),.(EmpCode)]
 
-   taux <- decomposicaoRetornoOutroArquivo(dtICC_D, dadosR_ano0)
-   taux[,ICC := paste0(gsub('ICC_','',ICC),"(%)")]
+   taux <- decomposicaoRetornoDeltaESG(dtICC_D, dadosR_ano0)[ICC == "ICC_GLS"]
+
    taux[,Valor := round(Valor*100,2)]
    taux <- dcast(taux,VAR+VARF~ICC,value.var = "Valor")
+   taux <- as.data.frame(taux)
+   rownames(taux) <- taux$VARF
 
-   taux1 <- decomposicaoRetornoOutroArquivo(dtICC_D, dadosR_ano1)
-   taux1[,ICC := paste0(gsub('ICC_','',ICC),"(%)")]
+   taux1 <- decomposicaoRetornoDeltaESG(dtICC_D, dadosR_ano1)[ICC == "ICC_GLS"]
+
    taux1[,Valor := round(Valor*100,2)]
    taux1 <- dcast(taux1,VAR+VARF~ICC,value.var = "Valor")
+   taux1 <- as.data.frame(taux1)
+   rownames(taux1) <- taux1$VARF
 
-   covCF_GLS <- ((taux1$`GLS(%)`[c(11)])-(taux1$`GLS(%)`[c(11)]+ taux$`GLS(%)`[c(11)])/2 )*((taux1$`GLS(%)`[c(4)])-(taux1$`GLS(%)`[c(4)]+ taux$`GLS(%)`[c(4)])/2 )+((taux$`GLS(%)`[c(11)])-(taux1$`GLS(%)`[c(11)]+ taux$`GLS(%)`[c(11)])/2 )*((taux$`GLS(%)`[c(4)])-(taux1$`GLS(%)`[c(4)]+ taux$`GLS(%)`[c(4)])/2 )
-   variancia_GLS <- (taux$`GLS(%)`[c(12)]-(taux1$`GLS(%)`[c(12)]+ taux$`GLS(%)`[c(12)])/2 )^2+(taux1$`GLS(%)`[c(12)]-(taux1$`GLS(%)`[c(12)]+ taux$`GLS(%)`[c(12)])/2 )^2
+   tb3 <- BetaTab3Calc(taux,taux1)
 
-   covDR_GLS <- ((taux1$`GLS(%)`[c(11)])-(taux1$`GLS(%)`[c(11)]+ taux$`GLS(%)`[c(11)])/2 )*((taux1$`GLS(%)`[c(6)])-(taux1$`GLS(%)`[c(6)]+ taux$`GLS(%)`[c(6)])/2 )+((taux$`GLS(%)`[c(11)])-(taux1$`GLS(%)`[c(11)]+ taux$`GLS(%)`[c(11)])/2 )*((taux$`GLS(%)`[c(6)])-(taux1$`GLS(%)`[c(6)]+ taux$`GLS(%)`[c(6)])/2 )
+   return(tb3)
+}
 
-   covCF_E <- ((taux1$`E(%)`[c(11)])-(taux1$`E(%)`[c(11)]+ taux$`E(%)`[c(11)])/2 )*((taux1$`E(%)`[c(4)])-(taux1$`E(%)`[c(4)]+ taux$`E(%)`[c(4)])/2 )+((taux$`E(%)`[c(11)])-(taux1$`E(%)`[c(11)]+ taux$`E(%)`[c(11)])/2 )*((taux$`E(%)`[c(4)])-(taux1$`E(%)`[c(4)]+ taux$`E(%)`[c(4)])/2 )
-   variancia_E <- (taux$`E(%)`[c(12)]-(taux1$`E(%)`[c(12)]+ taux$`E(%)`[c(12)])/2 )^2+(taux1$`E(%)`[c(12)]-(taux1$`E(%)`[c(12)]+ taux$`E(%)`[c(12)])/2 )^2
+BetaTab3Calc <- function(taux, taux1){
 
-   covDR_E <- ((taux1$`E(%)`[c(11)])-(taux1$`E(%)`[c(11)]+ taux$`E(%)`[c(11)])/2 )*((taux1$`E(%)`[c(6)])-(taux1$`E(%)`[c(6)]+ taux$`E(%)`[c(6)])/2 )+((taux$`E(%)`[c(11)])-(taux1$`E(%)`[c(11)]+ taux$`E(%)`[c(11)])/2 )*((taux$`E(%)`[c(6)])-(taux1$`E(%)`[c(6)]+ taux$`E(%)`[c(6)])/2 )
+   covCF_10 <- ((taux1$`ICC_GLS`[c(11)])-(taux1$`ICC_GLS`[c(11)]+ taux$`ICC_GLS`[c(11)])/2 )*((taux1$`ICC_GLS`[c(4)])-(taux1$`ICC_GLS`[c(4)]+ taux$`ICC_GLS`[c(4)])/2 )+((taux$`ICC_GLS`[c(11)])-(taux1$`ICC_GLS`[c(11)]+ taux$`ICC_GLS`[c(11)])/2 )*((taux$`ICC_GLS`[c(4)])-(taux1$`ICC_GLS`[c(4)]+ taux$`ICC_GLS`[c(4)])/2 )
+   variancia_10 <- (taux$`ICC_GLS`[c(12)]-(taux1$`ICC_GLS`[c(12)]+ taux$`ICC_GLS`[c(12)])/2 )^2+(taux1$`ICC_GLS`[c(12)]-(taux1$`ICC_GLS`[c(12)]+ taux$`ICC_GLS`[c(12)])/2 )^2
 
-   covCF_OJ <- ((taux1$`OJ(%)`[c(11)])-(taux1$`OJ(%)`[c(11)]+ taux$`OJ(%)`[c(11)])/2 )*((taux1$`OJ(%)`[c(4)])-(taux1$`OJ(%)`[c(4)]+ taux$`OJ(%)`[c(4)])/2 )+((taux$`OJ(%)`[c(11)])-(taux1$`OJ(%)`[c(11)]+ taux$`OJ(%)`[c(11)])/2 )*((taux$`OJ(%)`[c(4)])-(taux1$`OJ(%)`[c(4)]+ taux$`OJ(%)`[c(4)])/2 )
-   variancia_OJ <- (taux$`OJ(%)`[c(12)]-(taux1$`OJ(%)`[c(12)]+ taux$`OJ(%)`[c(12)])/2 )^2+(taux1$`OJ(%)`[c(12)]-(taux1$`OJ(%)`[c(12)]+ taux$`OJ(%)`[c(12)])/2 )^2
+   covDR_10 <- ((taux1$`ICC_GLS`[c(11)])-(taux1$`ICC_GLS`[c(11)]+ taux$`ICC_GLS`[c(11)])/2 )*((taux1$`ICC_GLS`[c(6)])-(taux1$`ICC_GLS`[c(6)]+ taux$`ICC_GLS`[c(6)])/2 )+((taux$`ICC_GLS`[c(11)])-(taux1$`ICC_GLS`[c(11)]+ taux$`ICC_GLS`[c(11)])/2 )*((taux$`ICC_GLS`[c(6)])-(taux1$`ICC_GLS`[c(6)]+ taux$`ICC_GLS`[c(6)])/2 )
 
-   covDR_OJ <- ((taux1$`OJ(%)`[c(11)])-(taux1$`OJ(%)`[c(11)]+ taux$`OJ(%)`[c(11)])/2 )*((taux1$`OJ(%)`[c(6)])-(taux1$`OJ(%)`[c(6)]+ taux$`OJ(%)`[c(6)])/2 )+((taux$`OJ(%)`[c(11)])-(taux1$`OJ(%)`[c(11)]+ taux$`OJ(%)`[c(11)])/2 )*((taux$`OJ(%)`[c(6)])-(taux1$`OJ(%)`[c(6)]+ taux$`OJ(%)`[c(6)])/2 )
+   # covCF_20 <- ((taux1$`L=[0-3] H=[7-10]`[c(11)])-(taux1$`L=[0-3] H=[7-10]`[c(11)]+ taux$`L=[0-3] H=[7-10]`[c(11)])/2 )*((taux1$`L=[0-3] H=[7-10]`[c(6)])-(taux1$`L=[0-3] H=[7-10]`[c(6)]+ taux$`L=[0-3] H=[7-10]`[c(6)])/2 )+((taux$`L=[0-3] H=[7-10]`[c(11)])-(taux1$`L=[0-3] H=[7-10]`[c(11)]+ taux$`L=[0-3] H=[7-10]`[c(11)])/2 )*((taux$`L=[0-3] H=[7-10]`[c(6)])-(taux1$`L=[0-3] H=[7-10]`[c(6)]+ taux$`L=[0-3] H=[7-10]`[c(6)])/2 )
+   # variancia_20 <- (taux$`L=[0-3] H=[7-10]`[c(12)]-(taux1$`L=[0-3] H=[7-10]`[c(12)]+ taux$`L=[0-3] H=[7-10]`[c(12)])/2 )^2+(taux1$`L=[0-3] H=[7-10]`[c(12)]-(taux1$`L=[0-3] H=[7-10]`[c(12)]+ taux$`L=[0-3] H=[7-10]`[c(12)])/2 )^2
+   #
+   # covDR_20 <- ((taux1$`L=[0-3] H=[7-10]`[c(11)])-(taux1$`L=[0-3] H=[7-10]`[c(11)]+ taux$`L=[0-3] H=[7-10]`[c(11)])/2 )*((taux1$`L=[0-3] H=[7-10]`[c(2)])-(taux1$`L=[0-3] H=[7-10]`[c(2)]+ taux$`L=[0-3] H=[7-10]`[c(2)])/2 )+((taux$`L=[0-3] H=[7-10]`[c(11)])-(taux1$`L=[0-3] H=[7-10]`[c(11)]+ taux$`L=[0-3] H=[7-10]`[c(11)])/2 )*((taux$`L=[0-3] H=[7-10]`[c(2)])-(taux1$`L=[0-3] H=[7-10]`[c(2)]+ taux$`L=[0-3] H=[7-10]`[c(2)])/2 )
+   #
+   # covCF_30 <- ((taux1$`L=[0-4] H=[6-10]`[c(11)])-(taux1$`L=[0-4] H=[6-10]`[c(11)]+ taux$`L=[0-4] H=[6-10]`[c(11)])/2 )*((taux1$`L=[0-4] H=[6-10]`[c(6)])-(taux1$`L=[0-4] H=[6-10]`[c(6)]+ taux$`L=[0-4] H=[6-10]`[c(6)])/2 )+((taux$`L=[0-4] H=[6-10]`[c(11)])-(taux1$`L=[0-4] H=[6-10]`[c(11)]+ taux$`L=[0-4] H=[6-10]`[c(11)])/2 )*((taux$`L=[0-4] H=[6-10]`[c(6)])-(taux1$`L=[0-4] H=[6-10]`[c(6)]+ taux$`L=[0-4] H=[6-10]`[c(6)])/2 )
+   # variancia_30 <- (taux$`L=[0-4] H=[6-10]`[c(12)]-(taux1$`L=[0-4] H=[6-10]`[c(12)]+ taux$`L=[0-4] H=[6-10]`[c(12)])/2 )^2+(taux1$`L=[0-4] H=[6-10]`[c(12)]-(taux1$`L=[0-4] H=[6-10]`[c(12)]+ taux$`L=[0-4] H=[6-10]`[c(12)])/2 )^2
+   #
+   # covDR_30 <- ((taux1$`L=[0-4] H=[6-10]`[c(11)])-(taux1$`L=[0-4] H=[6-10]`[c(11)]+ taux$`L=[0-4] H=[6-10]`[c(11)])/2 )*((taux1$`L=[0-4] H=[6-10]`[c(2)])-(taux1$`L=[0-4] H=[6-10]`[c(2)]+ taux$`L=[0-4] H=[6-10]`[c(2)])/2 )+((taux$`L=[0-4] H=[6-10]`[c(11)])-(taux1$`L=[0-4] H=[6-10]`[c(11)]+ taux$`L=[0-4] H=[6-10]`[c(11)])/2 )*((taux$`L=[0-4] H=[6-10]`[c(2)])-(taux1$`L=[0-4] H=[6-10]`[c(2)]+ taux$`L=[0-4] H=[6-10]`[c(2)])/2 )
+   #
+   BetaCF_V_weight <- covCF_10/variancia_10
+   BetaDR_V_weight <- covDR_10/variancia_10
+   #
+   # BetaCF_20 <- covCF_20/variancia_20
+   # BetaDR_20 <- covDR_20/variancia_20
 
-   covCF_CT <- ((taux1$`CT(%)`[c(11)])-(taux1$`CT(%)`[c(11)]+ taux$`CT(%)`[c(11)])/2 )*((taux1$`CT(%)`[c(4)])-(taux1$`CT(%)`[c(4)]+ taux$`CT(%)`[c(4)])/2 )+((taux$`CT(%)`[c(11)])-(taux1$`CT(%)`[c(11)]+ taux$`CT(%)`[c(11)])/2 )*((taux$`CT(%)`[c(4)])-(taux1$`CT(%)`[c(4)]+ taux$`CT(%)`[c(4)])/2 )
-   variancia_CT <- (taux$`CT(%)`[c(12)]-(taux1$`CT(%)`[c(12)]+ taux$`CT(%)`[c(12)])/2 )^2+(taux1$`CT(%)`[c(12)]-(taux1$`CT(%)`[c(12)]+ taux$`CT(%)`[c(12)])/2 )^2
+   # BetaCF_30 <- covCF_30/variancia_30
+   # BetaDR_30 <- covDR_30/variancia_30
 
-   covDR_CT <- ((taux1$`CT(%)`[c(11)])-(taux1$`CT(%)`[c(11)]+ taux$`CT(%)`[c(11)])/2 )*((taux1$`CT(%)`[c(6)])-(taux1$`CT(%)`[c(6)]+ taux$`CT(%)`[c(6)])/2 )+((taux$`CT(%)`[c(11)])-(taux1$`CT(%)`[c(11)]+ taux$`CT(%)`[c(11)])/2 )*((taux$`CT(%)`[c(6)])-(taux1$`CT(%)`[c(6)]+ taux$`CT(%)`[c(6)])/2 )
 
-   BetaCF_GLS <- covCF_GLS/variancia_GLS
-   BetaDR_GLS <- covDR_GLS/variancia_GLS
+   tbaux_10 <- rbind(BetaCF_V_weight ,BetaDR_V_weight)
+   # tbaux_20 <- rbind(BetaCF_20 ,BetaDR_20)
+   # tbaux_30 <- rbind(BetaCF_30 ,BetaDR_30)
 
-   BetaCF_E <- covCF_E/variancia_E
-   BetaDR_E <- covDR_E/variancia_E
+   nameTab <- data.frame(x1 = c("BetaCf","BetaDR"))
+   aux <- cbind(nameTab,nameTab, tbaux_10)
+   colnames(aux)<-c("VARF","VAR",	"DeltaHL")
 
-   BetaCF_OJ <- covCF_OJ/variancia_OJ
-   BetaDR_OJ <- covDR_OJ/variancia_OJ
+   colnames(taux)<-c("VARF","VAR",	"DeltaHL")
 
-   BetaCF_CT <- covCF_CT/variancia_CT
-   BetaDR_CT <- covDR_CT/variancia_CT
 
-   BetaCFAVG <- (BetaCF_GLS+BetaCF_CT+BetaCF_E+BetaCF_OJ)/4
-   BetaDRAVG <- (BetaDR_GLS+BetaDR_CT+BetaDR_E+BetaDR_OJ)/4
-
-   tbaux_G <- rbind(BetaCF_GLS ,BetaDR_GLS)
-   tbaux_E <- rbind(BetaCF_E ,BetaDR_E)
-   tbaux_C <- rbind(BetaCF_CT ,BetaDR_CT)
-   tbaux_O <- rbind(BetaCF_OJ ,BetaDR_OJ)
-   tbauxAVG <- rbind(BetaCFAVG, BetaDRAVG)
-
-   tbBetas <- cbind(tbaux_G,tbaux_C,tbaux_O,tbaux_E, tbauxAVG)
-return(rbind(tbBetas,tbBetas))
+   #aux2 <- rbind(taux,aux)
+   return(rbind(taux,aux))
 }

@@ -1,6 +1,6 @@
 tab4Build <- function(dadosn, dtICC_D,ano){
 
-   print(sprintf("entrou função"))
+   print(sprintf("entrou na função outro"))
    dadosR <- calculaRetorno(dadosn,ano)
    P10 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.9,1),L=c(0,.1)))[ICC == "ICC_GLS"]
    print(P10)
@@ -21,7 +21,7 @@ tab4Build <- function(dadosn, dtICC_D,ano){
 return(rbind(P10,P20,P30,P40,P50))
 }
 
-BetaTab4Calc <- function(taux, taux1){
+BetaTab4Calc <- function(taux, taux1, BetaNames){
    covCF_10 <- ((taux1$`10%`[c(11)])-(taux1$`10%`[c(11)]+ taux$`10%`[c(11)])/2 )*((taux1$`10%`[c(6)])-(taux1$`10%`[c(6)]+ taux$`10%`[c(6)])/2 )+((taux$`10%`[c(11)])-(taux1$`10%`[c(11)]+ taux$`10%`[c(11)])/2 )*((taux$`10%`[c(6)])-(taux1$`10%`[c(6)]+ taux$`10%`[c(6)])/2 )
    variancia_10 <- (taux$`10%`[c(12)]-(taux1$`10%`[c(12)]+ taux$`10%`[c(12)])/2 )^2+(taux1$`10%`[c(12)]-(taux1$`10%`[c(12)]+ taux$`10%`[c(12)])/2 )^2
 
@@ -70,8 +70,11 @@ BetaTab4Calc <- function(taux, taux1){
    tbaux_30 <- rbind(BetaCF_30 ,BetaDR_30)
    tbaux_40 <- rbind(BetaCF_40 ,BetaDR_40)
    tbaux_50 <- rbind(BetaCF_50, BetaDR_50)
+   nameTab <- BetaNames
    # print(sprintf("beta calculado"))
    # covCF_10 <- ((taux1$'10%' [c(11)]))
    # print(BetaDR_10)
-return(cbind(tbaux_50,tbaux_40,tbaux_30,tbaux_20, tbaux_10))
+   aux <- cbind(nameTab,tbaux_50,tbaux_40,tbaux_30,tbaux_20,tbaux_10 )
+   colnames(aux)<-c("VARF",	"10%",	"20%",	"30%", "40%", "50% (base case)")
+return(aux)
 }

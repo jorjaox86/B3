@@ -192,3 +192,4 @@ tb2 <- dcast(tb2,VARF~CASE,value.var = "Valor")
 tb2 <- as.data.frame(tb2)
 rownames(tb2) <- tb2$VARF
 kable(tb2[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
+print(tb2)

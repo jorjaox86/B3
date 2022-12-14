@@ -370,3 +370,11 @@ decomposicaoRetornoTeste <- function(dtICC_D,dadosR,interv=list(H=c(.5,1),L=c(0,
 
    return(rbind(R_H,R_L,R_M,R_HL,ER_HL,ER_M,UR_HL,UR_M,NCF_HL,NCF_M,NDR_HL,NDR_M))
 }
+
+midprocessing_table <- function(tab){
+   tab[,Valor := round(Valor*100,2)]
+   tab <- dcast(tab,VAR+VARF~ICC,value.var = "Valor")
+   tab <- as.data.frame(tab)
+   rownames(tab) <- tab$VARF
+   return(tab)
+}
