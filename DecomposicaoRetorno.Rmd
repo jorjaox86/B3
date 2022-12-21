@@ -294,7 +294,7 @@ BETA DISCOUNT RATE +$\beta_t^{DR+} = \frac{cov_t(UR^{HL}_{t+1},-NDR^M_{t+1}|UR^{
 ```
 
 ##TABELA 2
-Análise de Betas sobre portfólios que Aumentaram/diminuíram a pontuação ESG $\delta HL$
+Análise de Betas a partir dos ICC's obtido em cada método
 ```{r}
    tb2 <- betasTab2(dadosn, ano_0)
 
@@ -302,20 +302,20 @@ Análise de Betas sobre portfólios que Aumentaram/diminuíram a pontuação ESG
    colnames(tb2) <- c("VAR","GLS","CT","OJ","E","AVERAGE")
    tb2 <- as.data.frame(tb2)
    row.names(tb2) <- tb2$VAR
-   kable(tb2[c(1:4),2:6],align=c(rep('c', 5)))
+   kable(tb2[c(1:4),2:6],align=c(rep('c', 5)),digits=3)
 
    
 
 ```
 ##TABELA 3
-Análise dos betas a partir da variação da pontuação ESG em diferentes períodos
+Análise de Betas sobre portfólios que Aumentaram/diminuíram a pontuação ESG $\delta HL$
 ```{r}
    # dtICCESG_0 <- Tab3DeltaIndex(dtICC_D,esgTEMP,ano_0)
    # dtICCESG_1 <- Tab3DeltaIndex(dtICC_D,esgTEMP,ano_0)
    tb3 <- betasTab3(dadosn, dtICCESG,ano_0)
    rownames(tb3) <- tb3$VARF
    # kable(tb3)
-   kable(tb3[c(7,3,11,5,1,13,14,15,16),2:4],align=c(rep('c', 5)))
+   kable(tb3[c(7,3,11,5,1,13,14,15,16),2:4],align=c(rep('c', 5)),digits=3)
 
 ```
 
@@ -327,7 +327,7 @@ Análise dos Betas sobre portfólios, inserindo cutoffs nos dados
 
    tb4 <- tab4Build(dadosn, dtICC_D,ano_0)
    row.names(tb4) <- tb4$VARF
-   kable(tb4)
+  kable(tb4[c(7,3,11,5,1,13,14,15,16),6:2],align=c(rep('c', 5)),digits=3)
 
 ```
 
@@ -341,26 +341,24 @@ pontuação máxima: 10;
   
    tb5 <- tab5Build(ano_0,dadosn,dtICC_05_0,dtICC_05_1, dtICC_05_D,BetaNames)
    rownames(tb5) <- tb5$VARF
-   kable(tb5[c(7,3,11,5,1,13,14,15,16),2:4],align=c(rep('c', 5)))
+   kable(tb5[c(7,3,11,5,1,13,14,15,16),c(2,4,3)],align=c(rep('c', 5)),digits=3)
 ```
 
 ##TABELA 6
 Análise de retorno comparando as pontuações de E(environment), S(Social), G(Governance)
 ```{r}
 
-   tb6 <- tab6Build(dadosn, dtICC_D)
+   tb6 <- tab6Build(dadosn, dtICC_D, ano_0)
    rownames(tb6) <- tb6$VARF
-   kable(tb6[c(7,3,11,5,1,13,14,15,16),2:6],align=c(rep('c', 5)))
+   kable(tb6[c(7,3,11,5,1,13,14,15,16),c(3,6,5,4,2)],align=c(rep('c', 5)),digits=3)
    
 ```
 
 ##TABELA 7
 Análise de retorno comparando portfolios HL com pesos iguais e portifolios com score acima e abaixo de 50 pontos (Value-weighted)
 ```{r}
-   tb2
-   w <- rbind(BetaNames,BetaNamesP)
    tb7 <- tab7Build(dadosn, ano_0)
    row.names(tb7) <- tb7$VARF
-   kable(tb7[c(7,3,11,5,1,13,14,15,16),2:3],align=c(rep('c', 5)))
+   kable(tb7[c(7,3,11,5,1,13,14,15,16),2:3],align=c(rep('c', 5)),digits=3)
 
 ```

@@ -17,7 +17,6 @@ tab4Build <- function(dadosn, dtICC_D,anos){
    }
 
 
-   print(P50)
    tb4t <- BetaTab4Calc(tb4_1, tb4_2, tb4_3, tb4_4, tb4_5, BetaNames)
 
 return(tb4t)
@@ -149,8 +148,8 @@ BetaTab4Calc <- function(taux, taux1, taux2, taux3, taux4, BetaNames){
    BetaCF_p10 <- covCF_p10/variancia_p10
    BetaDR_p10 <- covDR_p10/variancia_p10
 
-   BetaCF_p20 <- covCF_p10/variancia_p20
-   BetaDR_p20 <- covDR_p10/variancia_p20
+   BetaCF_p20 <- covCF_p20/variancia_p20
+   BetaDR_p20 <- covDR_p20/variancia_p20
 
    BetaCF_p30 <- covCF_p30/variancia_p30
    BetaDR_p30 <- covDR_p30/variancia_p30
@@ -201,6 +200,18 @@ BetaTab4Calc <- function(taux, taux1, taux2, taux3, taux4, BetaNames){
    BetaCF_50 <- covCF_50/variancia_50
    BetaDR_50 <- covDR_50/variancia_50
 
+   BetaCF_p10[is.na(BetaCF_p10)] <- 0.000
+   BetaCF_p20[is.na(BetaCF_p20)] <- 0.000
+   BetaCF_p30[is.na(BetaCF_p30)] <- 0.000
+   BetaCF_p40[is.na(BetaCF_p40)] <- 0.000
+   BetaCF_p50[is.na(BetaCF_p50)] <- 0.000
+
+   BetaDR_p10[is.na(BetaDR_p10)] <- 0.000
+   BetaDR_p20[is.na(BetaDR_p20)] <- 0.000
+   BetaDR_p30[is.na(BetaDR_p30)] <- 0.000
+   BetaDR_p40[is.na(BetaDR_p40)] <- 0.000
+   BetaDR_p50[is.na(BetaDR_p50)] <- 0.000
+
    # BetaCFAVG <- (BetaCF_10+BetaCF_40+BetaCF_20+BetaCF_30)/4
    # BetaDRAVG <- (BetaDR_10+BetaDR_40+BetaDR_20+BetaDR_30)/4
 
@@ -214,21 +225,21 @@ BetaTab4Calc <- function(taux, taux1, taux2, taux3, taux4, BetaNames){
    # print(sprintf("beta calculado"))
    # covCF_10 <- ((taux1$'10%' [c(11)]))
    # print(BetaDR_10)
-   aux <- cbind(nameTab,tbaux_50,tbaux_20,tbaux_30,tbaux_30,tbaux_10 )
+   aux <- cbind(nameTab,tbaux_50,tbaux_20,tbaux_30,tbaux_40,tbaux_10 )
    colnames(aux)<-c("VARF",	"10%",	"20%",	"30%", "40%", "50% (base case)")
 return(rbind(taux,aux))
 }
 
 treatTab4 <- function(ano, dadosn, dtICC_D_4){
 
-   print(sprintf("entrou na função outro"))
+   # print(sprintf("entrou na função outro"))
 
    dadosR_4_0 <- calculaRetorno(dadosn,ano)
    P10 <- decomposicaoRetornoOutroArquivo(dtICC_D_4,dadosR_4_0,interv = list(H=c(.9,1),L=c(0,.1)))[ICC == "ICC_GLS"]
-   print(P10)
+   # print(P10)
    P20 <- decomposicaoRetornoOutroArquivo(dtICC_D_4,dadosR_4_0,interv = list(H=c(.8,1),L=c(0,.2)))[ICC == "ICC_GLS"]
    P30 <- decomposicaoRetornoOutroArquivo(dtICC_D_4,dadosR_4_0,interv = list(H=c(.7,1),L=c(0,.3)))[ICC == "ICC_GLS"]
-   print(P30)
+   # print(P30)
    P40 <- decomposicaoRetornoOutroArquivo(dtICC_D_4,dadosR_4_0,interv = list(H=c(.6,1),L=c(0,.4)))[ICC == "ICC_GLS"]
    P50 <- decomposicaoRetornoOutroArquivo(dtICC_D_4,dadosR_4_0,interv = list(H=c(.5,1),L=c(0,.5)))[ICC == "ICC_GLS"]
 
@@ -241,7 +252,7 @@ treatTab4 <- function(ano, dadosn, dtICC_D_4){
 
    tb4 <- midprocessing_table4(tb4)
 
-   print("saiu função")
+   # print("saiu função")
 
    return(tb4)
 }

@@ -1,4 +1,4 @@
-tab6Build <- function(dadosn, dtICC_D_6){
+tab6Build <- function(dadosn, dtICC_D_6,anos){
 
    print(sprintf("entrou função"))
    for(i in 1:5){

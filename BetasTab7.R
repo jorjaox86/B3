@@ -1,6 +1,6 @@
 tab7Build <- function(dadosn, anos){
 
-   print(sprintf("entrou função"))
+   # print(sprintf("entrou função"))
 
    for(i in 1:5){
       ano_selecionado <- anos+i-1
@@ -18,31 +18,8 @@ tab7Build <- function(dadosn, anos){
 
    }
 
-   print("saiu função")
-   # dtICCg_1 <- dtICC_1_mod7[,lapply(.SD,mean,na.rm=T),by=.(Group50),.SDcols=grep('ICC.*',colnames(dtICC_0_mod7),value = T)]
+   # print("saiu função")
 
-   # dtICC_D_7 <- deltaICCcut(dtICC_0,dtICC_1)
-   #
-   # ano <- ano_0
-   # dadosR_7_0 <- calculaRetorno(dadosn,ano)
-   #
-   # tb7_1 <- decomposicaoRetornoValueWeight(dtICC_D_7,dadosR_7_0)[ICC == "ICC_GLS"]
-   #
-   # ano <- ano_0+1
-   # dadosR_7_1 <- calculaRetorno(dadosn,ano)
-   #
-   # tb7_2 <- decomposicaoRetornoValueWeight(dtICC_D_7,dadosR_7_1)[ICC == "ICC_GLS"]
-   #
-   # tb7_1[,Valor := round(Valor*100,2)]
-   # tb7_1 <- dcast(tb7_1,VAR+VARF~ICC,value.var = "Valor")
-   # tb7_1 <- as.data.frame(tb7_1)
-   # rownames(tb7_1) <- tb7_1$VARF
-   # #kable(tb7_1,align=c(rep('c', 5)))
-   #
-   # tb7_2[,Valor := round(Valor*100,2)]
-   # tb7_2 <- dcast(tb7_2,VAR+VARF~ICC,value.var = "Valor")
-   # tb7_2 <- as.data.frame(tb7_2)
-   # rownames(tb7_2) <- tb7_2$VARF
 
    tb7 <- BetaTab7Calc(tb7_1, tb7_2, tb7_3, tb7_4, tb7_5, BetaNames)
 
@@ -69,7 +46,6 @@ BetaTab7Calc <- function(taux, taux1, taux2, taux3, taux4, BetaNames){
    URM <-list( URM_1,URM_2)#,URM_3)
    media <- list(media1,media2)#,media3)
 
-   var_p <- var(URM[[1]],y=NULL)
    # var_p <- var(URM_1)
    # print(sprintf("loop var"))
 
@@ -144,8 +120,14 @@ BetaTab7Calc <- function(taux, taux1, taux2, taux3, taux4, BetaNames){
       assign(paste0("covDR_",i*10),covaria)
    }
 
-   covDR_p <- cov(URHL_1[URHL_1>0],NDRM_1[URHL_1>0])
-   covCF_p <- cov(URHL_1[URHL_1>0],NCFM_1[URHL_1>0])
+   covDR_10p <- cov(URHL_1[URHL_1>0],NDRM_1[URHL_1>0])
+   covCF_10p <- cov(URHL_1[URHL_1>0],NCFM_1[URHL_1>0])
+
+   covDR_20p <- cov(URHL_2[URHL_2>0],NDRM_2[URHL_2>0])
+   covCF_20p <- cov(URHL_2[URHL_2>0],NCFM_2[URHL_2>0])
+
+   variancia_10p <- var(URM[[1]],y=NULL)
+   variancia_20p <- var(URM[[2]],y=NULL)
 
    # covCF_10 <- ((taux1$`(base case)`[c(11)])-(taux1$`(base case)`[c(11)]+ taux$`(base case)`[c(11)])/2 )*((taux1$`(base case)`[c(6)])-(taux1$`(base case)`[c(6)]+ taux$`(base case)`[c(6)])/2 )+((taux$`(base case)`[c(11)])-(taux1$`(base case)`[c(11)]+ taux$`(base case)`[c(11)])/2 )*((taux$`(base case)`[c(6)])-(taux1$`(base case)`[c(6)]+ taux$`(base case)`[c(6)])/2 )
    # variancia_10 <- (taux$`(base case)`[c(12)]-(taux1$`(base case)`[c(12)]+ taux$`(base case)`[c(12)])/2 )^2+(taux1$`(base case)`[c(12)]-(taux1$`(base case)`[c(12)]+ taux$`(base case)`[c(12)])/2 )^2
@@ -170,15 +152,21 @@ BetaTab7Calc <- function(taux, taux1, taux2, taux3, taux4, BetaNames){
    BetaCF_20 <- covCF_20/variancia_20
    BetaDR_20 <- covDR_20/variancia_20
 
+   BetaCF_10p <- covCF_10p/variancia_10p
+   BetaDR_10p <- covDR_10p/variancia_10p
+
+   BetaCF_20p <- covCF_20p/variancia_20p
+   BetaDR_20p <- covDR_20p/variancia_20p
+
    # BetaCF_30 <- covCF_30/variancia_30
    # BetaDR_30 <- covDR_30/variancia_30
 
-   BetaCF_p <- covCF_p/var_p
-   BetaDR_p <- covDR_p/var_p
+   BetaCF_10p <- covCF_10p/variancia_10p
+   BetaDR_20p <- covDR_20p/variancia_20p
 
 
-   tbaux_10 <- rbind(BetaCF_10 ,BetaDR_10, BetaCF_p, BetaDR_p)
-   tbaux_20 <- rbind(BetaCF_20 ,BetaDR_20, BetaCF_p, BetaDR_p)
+   tbaux_10 <- rbind(BetaCF_10 ,BetaDR_10, BetaCF_10p, BetaDR_10p)
+   tbaux_20 <- rbind(BetaCF_20 ,BetaDR_20, BetaCF_20p, BetaDR_20p)
    # tbaux_30 <- rbind(BetaCF_30 ,BetaDR_30)
 
    nameTab <- rbind(BetaNames,BetaNamesP)

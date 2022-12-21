@@ -24,69 +24,6 @@ betasTab3 <- function(dadosn,dt,anos){
    assign("tb3_5",treatTab3(ano_selecionado, dadosn, dtICCESG_5 ))
 
 
-   # dtICC_D <- copy(dt)
-   # ano<-ano_0
-   # dadosR_b <- dadosn[VAR %in% c("PRC","DPS") & Ano >= ano & Ano < ano + 5 & EmpCode %in% stocks]
-   # dadosR_b <- dcast(dadosR_b,EmpCode + Ano ~ VAR,value.var = "Valor")
-   # dadosR_b[, `:=` (P0 = shift(PRC),D0 = shift(DPS)),.(EmpCode)]
-   # dadosR_b <- dadosR_b[Ano != ano]
-   # dadosR_b[,R := ((PRC - D0)/P0)-1]
-   # dadosR_ano0 <- dadosR_b[,.(R = mean(R)),.(EmpCode)]
-   #
-   # ano <- ano_0+1
-   # dadosR_b <- dadosn[VAR %in% c("PRC","DPS") & Ano >= ano & Ano < ano + 5 & EmpCode %in% stocks]
-   # dadosR_b <- dcast(dadosR_b,EmpCode + Ano ~ VAR,value.var = "Valor")
-   # dadosR_b[, `:=` (P0 = shift(PRC),D0 = shift(DPS)),.(EmpCode)]
-   # dadosR_b <- dadosR_b[Ano != ano]
-   # dadosR_b[,R := ((PRC - D0)/P0)-1]
-   # dadosR_ano1 <- dadosR_b[,.(R = mean(R)),.(EmpCode)]
-   #
-   # taux <- decomposicaoRetornoDeltaESG(dtICC_D, dadosR_ano0)[ICC == "ICC_GLS"]
-   #
-   # taux[,Valor := round(Valor*100,2)]
-   # taux <- dcast(taux,VAR+VARF~ICC,value.var = "Valor")
-   # taux <- as.data.frame(taux)
-   # rownames(taux) <- taux$VARF
-   #
-   # taux1 <- decomposicaoRetornoDeltaESG(dtICC_D, dadosR_ano1)[ICC == "ICC_GLS"]
-   #
-   # taux1[,Valor := round(Valor*100,2)]
-   # taux1 <- dcast(taux1,VAR+VARF~ICC,value.var = "Valor")
-   # taux1 <- as.data.frame(taux1)
-   # rownames(taux1) <- taux1$VARF
-   #
-   # tb3 <- BetaTab3Calc(taux,taux1)
-   #
-   #
-   # ano<-ano_0
-   # dadosR_b <- dadosn[VAR %in% c("PRC","DPS") & Ano >= ano & Ano < ano + 5 & EmpCode %in% stocks]
-   # dadosR_b <- dcast(dadosR_b,EmpCode + Ano ~ VAR,value.var = "Valor")
-   # dadosR_b[, `:=` (P0 = shift(PRC),D0 = shift(DPS)),.(EmpCode)]
-   # dadosR_b <- dadosR_b[Ano != ano]
-   # dadosR_b[,R := ((PRC - D0)/P0)-1]
-   # dadosR_ano0 <- dadosR_b[,.(R = mean(R)),.(EmpCode)]
-   #
-   # ano <- ano_0+1
-   # dadosR_b <- dadosn[VAR %in% c("PRC","DPS") & Ano >= ano & Ano < ano + 5 & EmpCode %in% stocks]
-   # dadosR_b <- dcast(dadosR_b,EmpCode + Ano ~ VAR,value.var = "Valor")
-   # dadosR_b[, `:=` (P0 = shift(PRC),D0 = shift(DPS)),.(EmpCode)]
-   # dadosR_b <- dadosR_b[Ano != ano]
-   # dadosR_b[,R := ((PRC - D0)/P0)-1]
-   # dadosR_ano1 <- dadosR_b[,.(R = mean(R)),.(EmpCode)]
-   #
-   # taux2 <- decomposicaoRetornoDeltaESG(dtICC_D, dadosR_ano0,interv=list(H=c(.75,1),L=c(0.5,.75)))[ICC == "ICC_GLS"]
-   #
-   # taux2[,Valor := round(Valor*100,2)]
-   # taux2 <- dcast(taux2,VAR+VARF~ICC,value.var = "Valor")
-   # taux2 <- as.data.frame(taux2)
-   # rownames(taux2) <- taux2$VARF
-   #
-   # taux21 <- decomposicaoRetornoDeltaESG(dtICC_D, dadosR_ano1,interv=list(H=c(.75,1),L=c(0.5,.75)))[ICC == "ICC_GLS"]
-   #
-   # taux21[,Valor := round(Valor*100,2)]
-   # taux21 <- dcast(taux21,VAR+VARF~ICC,value.var = "Valor")
-   # taux21 <- as.data.frame(taux21)
-   # rownames(taux1) <- taux21$VARF
 
    tb3 <- BetaTab3Calc(tb3_1,tb3_2,tb3_3,tb3_4,tb3_5)
 
@@ -229,10 +166,18 @@ BetaTab3Calc <- function(taux, taux1, taux2, taux3, taux4){
    BetaCF_p30 <- covCF_p30/variancia_p30
    BetaDR_p30 <- covDR_p30/variancia_p30
 
+   BetaCF_p10[is.na(BetaCF_p10)] <- 0.000
+   BetaCF_p20[is.na(BetaCF_p20)] <- 0.000
+   BetaCF_p30[is.na(BetaCF_p20)] <- 0.000
+
+   BetaDR_p10[is.na(BetaDR_p10)] <- 0.000
+   BetaDR_p20[is.na(BetaDR_p20)] <- 0.000
+   BetaDR_p30[is.na(BetaDR_p30)] <- 0.000
 
    tbaux_10 <- rbind(BetaCF_10 ,BetaDR_10,  BetaCF_p10, BetaDR_p10)
    tbaux_20 <- rbind(BetaCF_20 ,BetaDR_20,  BetaCF_p20, BetaDR_p20)
    tbaux_30 <- rbind(BetaCF_30 ,BetaDR_30,  BetaCF_p30, BetaDR_p30)
+
 
    # nameTab <- BetaNames
    # print(sprintf("beta calculado"))
