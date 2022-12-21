@@ -1,6 +1,6 @@
 ### Tratamento de dados
 
-trataPrevisao <- function(dadosn,ref,ano=2015,vars = c("BPS","DPS","EPS","ROE")){
+trataPrevisao <- function(dadosn,ref,ano,vars = c("BPS","DPS","EPS","ROE")){
    ## Filtrando dados e desnormalizando os anos
    dt <- copy(dadosn)[Ano %in% ano:(ano+3)]
    dt[,Ano := paste0("Ano",Ano-ano)]
@@ -79,6 +79,8 @@ comparaICCs <- function(dtGLS_ICC,dtCT_ICC,dtOJ_ICC,dtE_ICC,dsBR,esgB3){
    dtICC <- dtICC[dtE_ICC,on="EmpCode",nomatch=0]
    dtICC <- dtICC[dsBR[,.(Symbol,RIC)],on=.(EmpCode=Symbol),nomatch=0]
    dtICC <- dtICC[esgB3,on = .(RIC = Stock),nomatch=0]
+   dtICC[ESG_Score >= 50, value_weight := "Alto"]
+   dtICC[ESG_Score <  50, value_weight := "Baixo"]
    dtICC[ESG_Score >= median(ESG_Score),Group50 := "Alto"]
    dtICC[ESG_Score < median(ESG_Score),Group50 := "Baixo"]
    dtICC[ESG_Score >= quantile(ESG_Score,.6),Group40 := "Alto"]

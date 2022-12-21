@@ -14,6 +14,14 @@ library(slickR)
 library(knitr)
 ```
 
+#carregando as funções necessárias
+
+```{r}
+    source("L:/B3/refresher.R")
+   refresher()
+```
+
+
 # Etapa 1 - Aquisição e tratamento dos dados
 
 ## Aquisitando dados
@@ -21,7 +29,6 @@ library(knitr)
 Dados aquisitados de planilha com dados cadastrais das empresas em *dados/Tickers.xlsx*
 
 ```{r,results='asis'}
-
 empB3 <- data.table(read_xlsx("dados/Tickers.xlsx"))
 dsBR <- data.table(read_xlsx("dados/Tickers.xlsx",sheet = "DataStream"))
 dsBR <- dsBR[RIC %in% empB3$Ticker]
@@ -32,7 +39,10 @@ dsBR
 Dados de Scores ESG em *dados/ESG_Score.xlsx*
 
 ```{r,results='asis'}
-BetaNames <- data.table(read_xlsx("BetaNames.xlsx"))
+# BetaNames <- data.table(read_xlsx("BetaNames.xlsx"))
+# colnames(BetaNames) <- "VARF"
+BetaNames <- data.frame(VARF = c("${Beta^(CF)}$","${Beta^(DR)}$"))
+BetaNamesP <- data.frame(VARF = c("${Beta^(CF+)}$","${Beta^(DR+)}$"))
 esgTEMP <- data.table(read_xlsx("dados/ESG_Score.xlsx"))
 esgTEMP[ESG_Score == "NULL",ESG_Score := NA]
 esgTEMP[Environmental_Score == "NULL",Environmental_Score := NA]
@@ -104,7 +114,7 @@ dadosn
 Completando casos faltantes com previsoes futuras e aceitando somente casos onde EPS_2 \> EPS_1 em função dos ICCs de Easton e Ohlson
 
 ```{r,results='asis'}
-ano_0 = 2014
+ano_0 = 2013 #era 2014
 dadosF_0 <- trataPrevisao(dadosn,ref,ano = ano_0,vars = c("BPS","DPS","EPS","ROE"))
 dadosF_1 <- trataPrevisao(dadosn,ref,ano = ano_0+1,vars = c("BPS","DPS","EPS","ROE"))
 dadosF_1
@@ -286,21 +296,26 @@ BETA DISCOUNT RATE +$\beta_t^{DR+} = \frac{cov_t(UR^{HL}_{t+1},-NDR^M_{t+1}|UR^{
 ##TABELA 2
 Análise de Betas sobre portfólios que Aumentaram/diminuíram a pontuação ESG $\delta HL$
 ```{r}
-   tb2 <- betasTab2(dadosn, dtICC_D)
-   colnames(tb2) <- c("GLS","CT","OJ","E","AVERAGE")
+   tb2 <- betasTab2(dadosn, ano_0)
+
+   
+   colnames(tb2) <- c("VAR","GLS","CT","OJ","E","AVERAGE")
    tb2 <- as.data.frame(tb2)
-   kable(tb2)
+   row.names(tb2) <- tb2$VAR
+   kable(tb2[c(1:4),2:6],align=c(rep('c', 5)))
 
-
+   
 
 ```
 ##TABELA 3
 Análise dos betas a partir da variação da pontuação ESG em diferentes períodos
 ```{r}
-   dtICCESG <- Tab3DeltaIndex(dtICC_D,esgTEMP)
-   tb3 <- betasTab3(dadosn, dtICCESG)
-   kable(tb3)
-
+   # dtICCESG_0 <- Tab3DeltaIndex(dtICC_D,esgTEMP,ano_0)
+   # dtICCESG_1 <- Tab3DeltaIndex(dtICC_D,esgTEMP,ano_0)
+   tb3 <- betasTab3(dadosn, dtICCESG,ano_0)
+   rownames(tb3) <- tb3$VARF
+   # kable(tb3)
+   kable(tb3[c(7,3,11,5,1,13,14,15,16),2:4],align=c(rep('c', 5)))
 
 ```
 
@@ -309,53 +324,10 @@ Análise dos betas a partir da variação da pontuação ESG em diferentes perí
 ##TABELA 4
 Análise dos Betas sobre portfólios, inserindo cutoffs nos dados
 ```{r}
-   P10 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.9,1),L=c(0,.1)))[ICC == "ICC_GLS"]
-   P20 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.8,1),L=c(0,.2)))[ICC == "ICC_GLS"]
-   P30 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.7,1),L=c(0,.3)))[ICC == "ICC_GLS"]
-   P40 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.6,1),L=c(0,.4)))[ICC == "ICC_GLS"]
-   P50 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.5,1),L=c(0,.5)))[ICC == "ICC_GLS"]
-   
-   P10[,CASE := "10%"]
-   P20[,CASE := "20%"]
-   P30[,CASE := "30%"]
-   P40[,CASE := "40%"]
-   P50[,CASE := "50% (base case)"]
-   
-   
-   tb5 <- rbind(P10,P20,P30,P40,P50)
-   tb5[,Valor := round(Valor*100,2)]
-   tb5 <- dcast(tb5,VARF~CASE,value.var = "Valor")
-   tb5 <- as.data.frame(tb5)
-   rownames(tb5) <- tb5$VARF
-   kable(tb5[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
 
-   tb4_1 <- tab4Build(dadosn, dtICC_D,ano_0+1)
-   tb4_2 <- tab4Build(dadosn, dtICC_D,ano_0)
-
-   # tb4 <- BetaTab4Calc(tb4_1,tb4_2)
-   
-   # tb4_1 <- rbind(P10,P20,P30,P40,P50)
-   tb4_1[,Valor := round(Valor*100,2)]
-   tb4_1 <- dcast(tb4_1,VARF~CASE,value.var = "Valor")
-   tb4_1 <- as.data.frame(tb4_1)
-   rownames(tb4_1) <- tb4_1$VARF
-   kable(tb4_1[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
-   
-   # tb4_2 <- rbind(P10,P20,P30,P40,P50)
-   tb4_2[,Valor := round(Valor*100,2)]
-   tb4_2 <- dcast(tb4_2,VARF~CASE,value.var = "Valor")
-   tb4_2 <- as.data.frame(tb4_2)
-   rownames(tb4_2) <- tb4_2$VARF
-   kable(tb4_2[c(5,6,4,2,7,3,1),6:2],align=c(rep('c', 5)))
-   
-   rowSums(tb4_2[, c("40%", "30%","20%")])
-   
-   
-   info <- BetaTab4Calc(tb4_1, tb4_2, BetaNames)
-   tb5_1 <- rbind(tb5,info)
-   
-   kable(info)
-   kable(tb5_1)
+   tb4 <- tab4Build(dadosn, dtICC_D,ano_0)
+   row.names(tb4) <- tb4$VARF
+   kable(tb4)
 
 ```
 
@@ -366,35 +338,29 @@ pontuação ESG L abaixo de 4 e ESG H acima de 6;
 pontuação máxima: 10;
 
 ```{r}
-   tb5 <- tab5Build(dadosn, dtICC_D,BetaNames)
+  
+   tb5 <- tab5Build(ano_0,dadosn,dtICC_05_0,dtICC_05_1, dtICC_05_D,BetaNames)
    rownames(tb5) <- tb5$VARF
-   kable(tb5)
+   kable(tb5[c(7,3,11,5,1,13,14,15,16),2:4],align=c(rep('c', 5)))
 ```
 
 ##TABELA 6
 Análise de retorno comparando as pontuações de E(environment), S(Social), G(Governance)
 ```{r}
-   # tb6 <- decomposicaoRetornoOutroArquivo(dtICC_D,dadosR,interv = list(H=c(.5,1),L=c(0,.5)))[ICC == "ICC_GLS"]
-   # 
-   # # P50[,CASE := "50% (base case)"]
-   # # 
-   # # tb6 <- P50
-   # tb6[,Valor := round(Valor*100,2)]
-   # tb6 <- dcast(tb6,VAR+VARF~ICC,value.var = "Valor")
-   # tb6 <- as.data.frame(tb6)
-   # rownames(tb6) <- tb6$VARF
-   # kable(tb6,align=c(rep('c', 5)))
+
    tb6 <- tab6Build(dadosn, dtICC_D)
-   kable(tb6)
-   class(tb6)
+   rownames(tb6) <- tb6$VARF
+   kable(tb6[c(7,3,11,5,1,13,14,15,16),2:6],align=c(rep('c', 5)))
+   
 ```
 
 ##TABELA 7
 Análise de retorno comparando portfolios HL com pesos iguais e portifolios com score acima e abaixo de 50 pontos (Value-weighted)
 ```{r}
    tb2
-   tb7 <- tab7Build(dtGLS_ICC_0,dtCT_ICC_0,dtOJ_ICC_0,dtE_ICC_0,dsBR,esgB3,dadosn)
-   kable(tb7)
-   # tb7[,Environmental_Score := as.numeric(Environmental_Score)]
-   # tb7_2 <- dcast(tb7_2,VAR+VARF~ICC,value.var = "Valor")
+   w <- rbind(BetaNames,BetaNamesP)
+   tb7 <- tab7Build(dadosn, ano_0)
+   row.names(tb7) <- tb7$VARF
+   kable(tb7[c(7,3,11,5,1,13,14,15,16),2:3],align=c(rep('c', 5)))
+
 ```
