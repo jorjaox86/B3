@@ -255,7 +255,7 @@ rownames(tb1) <- tb1$VARF
 kable(tb1[c(4,6,5,1,7,2,3),-c(1,2)],align=c(rep('c', 4)))
 ```
 
-## Tabela 2
+## Tabela 1.5
 Teste de robustez
 Análise do ICC GLS considerando $ESG^H$ os scores maiores que $1-p$ e $ESG^L$ os scores menores que $p$ 
 
@@ -288,17 +288,11 @@ BETA DISCOUNT RATE $\beta_t^{DR} = \frac{cov_t(UR^{HL}_{t+1},-NDR^M_{t+1})}{var_
 BETA CASHFLOW +$\beta_t^{CF+} = \frac{cov_t(UR^{HL}_{t+1},NCF^M_{t+1}|UR^{M}_{t+1}>0)}{var_t(UR^{M}_{t+1})}$
 BETA DISCOUNT RATE +$\beta_t^{DR+} = \frac{cov_t(UR^{HL}_{t+1},-NDR^M_{t+1}|UR^{M}_{t+1})}{var_t(UR^{M}_{t+1})}$
 
-```{r}
-   
-
-```
 
 ##TABELA 2
 Análise de Betas a partir dos ICC's obtido em cada método
 ```{r}
    tb2 <- betasTab2(dadosn, ano_0)
-
-   
    colnames(tb2) <- c("VAR","GLS","CT","OJ","E","AVERAGE")
    tb2 <- as.data.frame(tb2)
    row.names(tb2) <- tb2$VAR
@@ -310,11 +304,9 @@ Análise de Betas a partir dos ICC's obtido em cada método
 ##TABELA 3
 Análise de Betas sobre portfólios que Aumentaram/diminuíram a pontuação ESG $\delta HL$
 ```{r}
-   # dtICCESG_0 <- Tab3DeltaIndex(dtICC_D,esgTEMP,ano_0)
-   # dtICCESG_1 <- Tab3DeltaIndex(dtICC_D,esgTEMP,ano_0)
+   
    tb3 <- betasTab3(dadosn, dtICCESG,ano_0)
    rownames(tb3) <- tb3$VARF
-   # kable(tb3)
    kable(tb3[c(7,3,11,5,1,13,14,15,16),2:4],align=c(rep('c', 5)),digits=3)
 
 ```

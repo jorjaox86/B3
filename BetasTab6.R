@@ -1,6 +1,5 @@
 tab6Build <- function(dadosn, dtICC_D_6,anos){
 
-   print(sprintf("entrou função"))
    for(i in 1:5){
       ano_selecionado <- anos+i-1
 
@@ -17,7 +16,6 @@ tab6Build <- function(dadosn, dtICC_D_6,anos){
 
    }
 
-   print("saiu função")
 
    tb6 <- BetaTab6Calc(tb6_1,tb6_2,tb6_3,tb6_4,tb6_5)
    # tb6_E <- BetaTab6Calc(tb6_1_E,tb6_2_E)
@@ -161,24 +159,24 @@ BetaTab6Calc <- function(taux, taux1, taux2, taux3, taux4){
 
    ###########################################################
 
-   covDR_p10 <- cov(URHL_1[URHL_1>0],NDRM_1[URHL_1>0])
-   covCF_p10 <- cov(URHL_1[URHL_1>0],NCFM_1[URHL_1>0])
+   covDR_p10 <- cov(URHL_1[URM_1>0],NDRM_1[URM_1>0])
+   covCF_p10 <- cov(URHL_1[URM_1>0],NCFM_1[URM_1>0])
    variancia_p10 <- var(URM_1,y=NULL)
 
-   covDR_p20 <- cov(URHL_2[URHL_2>0],NDRM_2[URHL_2>0])
-   covCF_p20 <- cov(URHL_2[URHL_2>0],NCFM_2[URHL_2>0])
+   covDR_p20 <- cov(URHL_2[URM_2>0],NDRM_2[URM_2>0])
+   covCF_p20 <- cov(URHL_2[URM_2>0],NCFM_2[URM_2>0])
    variancia_p20 <- var(URM_2,y=NULL)
 
-   covDR_p30 <- cov(URHL_3[URHL_3>0],NDRM_3[URHL_3>0])
-   covCF_p30 <- cov(URHL_3[URHL_3>0],NCFM_3[URHL_3>0])
+   covDR_p30 <- cov(URHL_3[URM_3>0],NDRM_3[URM_3>0])
+   covCF_p30 <- cov(URHL_3[URM_3>0],NCFM_3[URM_3>0])
    variancia_p30 <- var(URM_3,y=NULL)
 
-   covDR_p40 <- cov(URHL_4[URHL_4>0],NDRM_4[URHL_4>0])
-   covCF_p40 <- cov(URHL_4[URHL_4>0],NCFM_4[URHL_4>0])
+   covDR_p40 <- cov(URHL_4[URM_4>0],NDRM_4[URM_4>0])
+   covCF_p40 <- cov(URHL_4[URM_4>0],NCFM_4[URM_4>0])
    variancia_p40 <- var(URM_4,y=NULL)
 
-   covDR_p50 <- cov(URHL_5[URHL_5>0],NDRM_5[URHL_5>0])
-   covCF_p50 <- cov(URHL_5[URHL_5>0],NCFM_5[URHL_5>0])
+   covDR_p50 <- cov(URHL_5[URM_5>0],NDRM_5[URM_5>0])
+   covCF_p50 <- cov(URHL_5[URM_5>0],NCFM_5[URM_5>0])
    variancia_p50 <- var(URM_5,y=NULL)
 
    ######################################################
@@ -186,8 +184,8 @@ BetaTab6Calc <- function(taux, taux1, taux2, taux3, taux4){
    BetaCF_p10 <- covCF_p10/variancia_p10
    BetaDR_p10 <- covDR_p10/variancia_p10
 
-   BetaCF_p20 <- covCF_p10/variancia_p20
-   BetaDR_p20 <- covDR_p10/variancia_p20
+   BetaCF_p20 <- covCF_p20/variancia_p20
+   BetaDR_p20 <- covDR_p20/variancia_p20
 
    BetaCF_p30 <- covCF_p30/variancia_p30
    BetaDR_p30 <- covDR_p30/variancia_p30
@@ -214,6 +212,18 @@ BetaTab6Calc <- function(taux, taux1, taux2, taux3, taux4){
 
    BetaCF_50 <- covCF_50/variancia_50
    BetaDR_50 <- covDR_50/variancia_50
+
+   BetaCF_p10[is.na(BetaCF_p10)] <- 0.000
+   BetaCF_p20[is.na(BetaCF_p20)] <- 0.000
+   BetaCF_p30[is.na(BetaCF_p30)] <- 0.000
+   BetaCF_p40[is.na(BetaCF_p40)] <- 0.000
+   BetaCF_p50[is.na(BetaCF_p50)] <- 0.000
+
+   BetaDR_p10[is.na(BetaDR_p10)] <- 0.000
+   BetaDR_p20[is.na(BetaDR_p20)] <- 0.000
+   BetaDR_p30[is.na(BetaDR_p30)] <- 0.000
+   BetaDR_p40[is.na(BetaDR_p40)] <- 0.000
+   BetaDR_p50[is.na(BetaDR_p50)] <- 0.000
 
 
    tbaux_10 <- rbind(BetaCF_10 ,BetaDR_10, BetaCF_p10 ,BetaDR_p10)

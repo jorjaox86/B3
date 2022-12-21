@@ -134,17 +134,18 @@ BetaTab3Calc <- function(taux, taux1, taux2, taux3, taux4){
    # covDR_30 <- ((taux1$`DeltaL`[c(11)])-(taux1$`DeltaL`[c(11)]+ taux$`DeltaL`[c(11)])/2 )*((taux1$`DeltaL`[c(2)])-(taux1$`DeltaL`[c(2)]+ taux$`DeltaL`[c(2)])/2 )+((taux$`DeltaL`[c(11)])-(taux1$`DeltaL`[c(11)]+ taux$`DeltaL`[c(11)])/2 )*((taux$`DeltaL`[c(2)])-(taux1$`DeltaL`[c(2)]+ taux$`DeltaL`[c(2)])/2 )
 
 
-   covDR_p10 <- cov(URHL_1[URHL_1>0],NDRM_1[URHL_1>0])
-   covCF_p10 <- cov(URHL_1[URHL_1>0],NCFM_1[URHL_1>0])
+   covDR_p10 <- cov(URHL_1[URM_1>0],NDRM_1[URM_1>0])
+   covCF_p10 <- cov(URHL_1[URM_1>0],NCFM_1[URM_1>0])
    variancia_p10 <- var(URM_1,y=NULL)
 
-   covDR_p20 <- cov(URHL_2[URHL_2>0],NDRM_2[URHL_2>0])
-   covCF_p20 <- cov(URHL_2[URHL_2>0],NCFM_2[URHL_2>0])
+   covDR_p20 <- cov(URHL_2[URM_2>0],NDRM_2[URM_2>0])
+   covCF_p20 <- cov(URHL_2[URM_2>0],NCFM_2[URM_2>0])
    variancia_p20 <- var(URM_2,y=NULL)
 
-   covDR_p30 <- cov(URHL_3[URHL_3>0],NDRM_3[URHL_3>0])
-   covCF_p30 <- cov(URHL_3[URHL_3>0],NCFM_3[URHL_3>0])
+   covDR_p30 <- cov(URHL_3[URM_3>0],NDRM_3[URM_3>0])
+   covCF_p30 <- cov(URHL_3[URM_3>0],NCFM_3[URM_3>0])
    variancia_p30 <- var(URM_3,y=NULL)
+
 
    ###Cálculo dos Betas##############################################
 

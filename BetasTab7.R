@@ -120,11 +120,11 @@ BetaTab7Calc <- function(taux, taux1, taux2, taux3, taux4, BetaNames){
       assign(paste0("covDR_",i*10),covaria)
    }
 
-   covDR_10p <- cov(URHL_1[URHL_1>0],NDRM_1[URHL_1>0])
-   covCF_10p <- cov(URHL_1[URHL_1>0],NCFM_1[URHL_1>0])
+   covDR_10p <- cov(URHL_1[URM_1>0],NDRM_1[URM_1>0])
+   covCF_10p <- cov(URHL_1[URM_1>0],NCFM_1[URM_1>0])
 
-   covDR_20p <- cov(URHL_2[URHL_2>0],NDRM_2[URHL_2>0])
-   covCF_20p <- cov(URHL_2[URHL_2>0],NCFM_2[URHL_2>0])
+   covDR_20p <- cov(URHL_2[URM_2>0],NDRM_2[URM_2>0])
+   covCF_20p <- cov(URHL_2[URM_2>0],NCFM_2[URM_2>0])
 
    variancia_10p <- var(URM[[1]],y=NULL)
    variancia_20p <- var(URM[[2]],y=NULL)
