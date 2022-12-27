@@ -41,8 +41,8 @@ Dados de Scores ESG em *dados/ESG_Score.xlsx*
 ```{r,results='asis'}
 # BetaNames <- data.table(read_xlsx("BetaNames.xlsx"))
 # colnames(BetaNames) <- "VARF"
-BetaNames <- data.frame(VARF = c("${Beta^(CF)}$","${Beta^(DR)}$"))
-BetaNamesP <- data.frame(VARF = c("${Beta^(CF+)}$","${Beta^(DR+)}$"))
+BetaNames <- data.frame(VARF = c("$\\beta^{CF}$","$\\beta^{DR}$"))
+BetaNamesP <- data.frame(VARF = c("$\\beta^{CF+}$","$\\beta^{DR+}$"))
 esgTEMP <- data.table(read_xlsx("dados/ESG_Score.xlsx"))
 esgTEMP[ESG_Score == "NULL",ESG_Score := NA]
 esgTEMP[Environmental_Score == "NULL",Environmental_Score := NA]
@@ -283,6 +283,7 @@ Análise do ICC GLS considerando $ESG^H$ os scores maiores que $1-p$ e $ESG^L$ o
 
 
 ##CÁLCULO DOS BETAS
+$\beta^{CF}$
 BETA CASHFLOW $\beta_t^{CF} = \frac{cov_t(UR^{HL}_{t+1},NCF^M_{t+1})}{var_t(UR^{M}_{t+1})}$
 BETA DISCOUNT RATE $\beta_t^{DR} = \frac{cov_t(UR^{HL}_{t+1},-NDR^M_{t+1})}{var_t(UR^{M}_{t+1})}$
 BETA CASHFLOW +$\beta_t^{CF+} = \frac{cov_t(UR^{HL}_{t+1},NCF^M_{t+1}|UR^{M}_{t+1}>0)}{var_t(UR^{M}_{t+1})}$
